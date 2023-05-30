@@ -5,17 +5,16 @@
         position: relative;
     }
     
-    .chartWrapper > canvas {
+    .chartWrapper > svg {
         position: absolute;
         left: 0;
         top: 0;
-        pointer-events:none;
     }
     
     .chartAreaWrapper {
-        width: 15000px;
-        overflow-x: scroll;
-        overflow-y: scroll;
+        width: 1200px;
+        height: 500px;
+        overflow: auto;
     }
   </style>
 {% endblock %}
@@ -26,16 +25,16 @@
             <div class="col-lg-12 chartAreaWrapper">
                 <h5>Graph</h5>
                 <hr>
-                <canvas id="myChart"  ></canvas>
+                <div id="chartContainer">
+                    <svg id="myChart"></svg>
+                </div>
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function(){
-            let ctx = document.getElementById('myChart').getContext('2d');
             let contextData = JSON.parse('{{ context_json|safe }}');
             let profitList = contextData.profit_list;
             let openingTimeList = contextData.opening_time_list;
@@ -52,62 +51,50 @@
               averageBalance.push(average);
             }
 
-            let myChart = new Chart(ctx, {
-              type: 'line',
-              data: {
-                labels: openingTimeList,
-                datasets: [
-                  {
-                    label: 'Total Balance',
-                    data: totalBalance, 
-                    borderColor: 'blue',
-                    fill: false
-                  },
-                  {
-                    label: 'Average Balance',
-                    data: averageBalance,
-                    borderColor: 'green',
-                    fill: false
-                  }
-                ]
-              },
-              options: {
-                responsive: true,
-                scales: {
-                  x: {
-                    display: true,
-                    title: {
-                      display: true,
-                      text: 'Opening Time'
-                    }
-                  },
-                  y: {
-                    display: true,
-                    title: {
-                      display: true,
-                      text: 'Balance'
-                    }
-                  }
-                },
-                plugins: {
-                  zoom: {
-                    zoom: {
-                      wheel: {
-                        enabled: true
-                      },
-                      mode: 'xy',
-                      speed: 0.1
-                    },
-                    
-                  }
-                },
-                interaction: {
-                  mode: 'nearest',
-                  intersect: false,
-                },
-                
-              }
-            });
+            const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+            const width = 9000 - margin.left - margin.right;
+            const height = 400 - margin.top - margin.bottom;
+
+            const svg = d3.select('#myChart')
+              .attr('width', width + margin.left + margin.right)
+              .attr('height', height + margin.top + margin.bottom)
+              .append('g')
+              .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const xScale = d3.scalePoint()
+              .domain(openingTimeList)
+              .range([0, width]);
+
+            const yScale = d3.scaleLinear()
+              .domain([0, d3.max(totalBalance)])
+              .range([height, 0]);
+
+            const line = d3.line()
+              .defined((d) => !isNaN(d))
+              .x((d, i) => xScale(openingTimeList[i]))
+              .y((d) => yScale(d));
+
+            svg.append('path')
+              .datum(totalBalance)
+              .attr('fill', 'none')
+              .attr('stroke', 'blue')
+              .attr('d', line);
+
+            svg.append('path')
+              .datum(averageBalance)
+              .attr('fill', 'none')
+              .attr('stroke', 'green')
+              .attr('d', line);
+
+            svg.append('g')
+              .attr('transform', `translate(0,${height})`)
+              .call(d3.axisBottom(xScale));
+
+            svg.append('g')
+              .call(d3.axisLeft(yScale));
+
+            d3.select('#chartContainer').node().scrollLeft = width;
+
         });
     </script>
 {% endblock %}
