@@ -1,3 +1,0 @@
-calculate the average balance of each month
-propegate the second line on the graph using that average balance.
-so one line should be balanceWithAllProfits, second line should be of Averagebalance

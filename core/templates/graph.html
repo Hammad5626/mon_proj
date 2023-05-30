@@ -1,13 +1,32 @@
 {% extends 'base.html' %}
+{% block style %}
+  <style>
+    .chartWrapper {
+        position: relative;
+    }
+    
+    .chartWrapper > canvas {
+        position: absolute;
+        left: 0;
+        top: 0;
+        pointer-events:none;
+    }
+    
+    .chartAreaWrapper {
+        width: 15000px;
+        overflow-x: scroll;
+        overflow-y: scroll;
+    }
+  </style>
+{% endblock %}
 
 {% block content %}
     <div class="container mt-5">
-        <div class="row">
-            <div class="col-lg-12">
+        <div class="row chartWrapper">
+            <div class="col-lg-12 chartAreaWrapper">
                 <h5>Graph</h5>
                 <hr>
-                <canvas id="myChart"></canvas>
-                <input type="range" id="dataRange" class="form-range" min="0" max="{{ context_json.profit_list|length }}" step="1">
+                <canvas id="myChart"  ></canvas>
             </div>
         </div>
     </div>
@@ -76,35 +95,18 @@
                       wheel: {
                         enabled: true
                       },
-                      pinch: {
-                        enabled: true
-                      },
                       mode: 'xy',
                       speed: 0.1
                     },
-                    pan: {
-                      enabled: true,
-                      mode: 'xy',
-                      speed: 0.1
-                    },
+                    
                   }
                 },
                 interaction: {
                   mode: 'nearest',
                   intersect: false,
                 },
-                onHover: function(event, chartElement) {
-                  event.target.style.cursor = chartElement[0] ? 'move' : 'default';
-                }
+                
               }
-            });
-
-            let dataRange = document.getElementById('dataRange');
-            dataRange.addEventListener('input', function() {
-              let newDataLength = parseInt(this.value);
-              myChart.data.datasets[0].data = totalBalance.slice(0, newDataLength);
-              myChart.data.datasets[1].data = averageBalance.slice(0, newDataLength);
-              myChart.update();
             });
         });
     </script>
