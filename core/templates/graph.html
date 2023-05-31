@@ -1,98 +1,192 @@
 {% extends 'base.html' %}
+
 {% block style %}
   <style>
     .chartWrapper {
-        position: relative;
+      position: relative;
     }
-    
+
     .chartWrapper > svg {
-        position: absolute;
-        left: 0;
-        top: 0;
+      position: absolute;
+      left: 0;
+      top: 0;
     }
-    
+
     .chartAreaWrapper {
-        overflow: auto;
+      width: 100%;
+      height: 500px;
+      overflow-x: scroll;
+      overflow-y: scroll;
     }
+    .tooltip {
+      position: absolute;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 5px;
+      font-size: 12px;
+      pointer-events: none;
+    }    
   </style>
 {% endblock %}
 
 {% block content %}
-    <div class="container mt-5">
-        <div class="row chartWrapper">
-            <div class="col-lg-12 chartAreaWrapper">
-                <h5>Graph</h5>
-                <hr>
-                <div id="chartContainer">
-                    <svg id="myChart"></svg>
-                </div>
-            </div>
-        </div>
+  <div class="container mt-5">
+    <div class="row chartWrapper">
+      <div class="col-lg-12 chartAreaWrapper">
+        <h5>Graph</h5>
+        <hr>
+        <div class="input-group mb-3">
+          <label class="input-group-text" for="widthInput">Width:</label>
+          <input type="text" class="form-control" id="widthInput" value="10000">
+          <label class="input-group-text" for="heightInput">Height:</label>
+          <input type="text" class="form-control" id="heightInput" value="500">
+        </div>              
+        <svg id="myChart"></svg>
+      </div>
     </div>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function(){
-            let contextData = JSON.parse('{{ context_json|safe }}');
-            let profitList = contextData.profit_list;
-            let openingTimeList = contextData.opening_time_list;
-            let startingBalance = 100;
-            let totalBalance = [startingBalance];
-            let averageBalance = [startingBalance];
-
-            for (let i = 0; i < profitList.length; i++) {
-              let currentBalance = totalBalance[i] + profitList[i];
-              totalBalance.push(currentBalance);
-
-              let sum = totalBalance.reduce((acc, val) => acc + val, 0);
-              let average = sum / (i + 1);
-              averageBalance.push(average);
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      let contextData = JSON.parse('{{ context_json|safe }}');
+      let profitList = contextData.profit_list;
+      let openingTimeList = contextData.opening_time_list;
+      let startingBalance = 100;
+      let totalBalance = [startingBalance];
+      let averageBalance = [startingBalance];
+    
+      let margin = { top: 20, right: 20, bottom: 30, left: 50 };
+      let width = (openingTimeList.length * 12) - margin.left - margin.right;
+      let height = 1000 - margin.top - margin.bottom;
+    
+      let svg = d3.select('#myChart')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+    
+      // Create the tooltip element
+      let tooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0);
+    
+      for (let i = 0; i < profitList.length; i++) {
+        let currentBalance = totalBalance[i] + profitList[i];
+        totalBalance.push(currentBalance);
+    
+        let sum = totalBalance.reduce((acc, val) => acc + val, 0);
+        let average = sum / (i + 1);
+        averageBalance.push(average);
+      }
+    
+      let xScale = d3.scaleBand()
+        .domain(openingTimeList)
+        .range([0, width])
+        .padding(0.1);
+    
+      let yScale = d3.scaleLinear()
+        .domain([0, d3.max(totalBalance)])
+        .range([height, 0]);
+    
+      let line = d3.line()
+        .x((d, i) => xScale(openingTimeList[i]))
+        .y((d) => yScale(d))
+        .curve(d3.curveMonotoneX);
+    
+      let drawChart = () => {
+        svg.selectAll('*').remove();
+      
+        width = +d3.select('#widthInput').node().value;
+        height = +d3.select('#heightInput').node().value;
+        svg.attr('width', width + margin.left + margin.right)
+          .attr('height', height + margin.top + margin.bottom);
+      
+        xScale.range([0, width]);
+        yScale.range([height, 0]);
+      
+        // Dynamic positioning
+        d3.select('.chartAreaWrapper')
+          .style('cursor', function() {
+            if (width < 500 && height < 300) {
+              return 'nw-resize';
+            } else if (width < 500) {
+              return 'w-resize';
+            } else if (height < 300) {
+              return 'n-resize';
+            } else {
+              return 'default';
             }
+          });
 
-            const margin = { top: 20, right: 20, bottom: 30, left: 50 };
-            const width = 9000 - margin.left - margin.right;
-            const height = 400 - margin.top - margin.bottom;
-
-            const svg = d3.select('#myChart')
-              .attr('width', width + margin.left + margin.right)
-              .attr('height', height + margin.top + margin.bottom)
-              .append('g')
-              .attr('transform', `translate(${margin.left},${margin.top})`);
-
-            const xScale = d3.scalePoint()
-              .domain(openingTimeList)
-              .range([0, width]);
-
-            const yScale = d3.scaleLinear()
-              .domain([0, d3.max(totalBalance)])
-              .range([height, 0]);
-
-            const line = d3.line()
-              .defined((d) => !isNaN(d))
-              .x((d, i) => xScale(openingTimeList[i]))
-              .y((d) => yScale(d));
-
-            svg.append('path')
-              .datum(totalBalance)
-              .attr('fill', 'none')
-              .attr('stroke', 'blue')
-              .attr('d', line);
-
-            svg.append('path')
-              .datum(averageBalance)
-              .attr('fill', 'none')
-              .attr('stroke', 'green')
-              .attr('d', line);
-
-            svg.append('g')
-              .attr('transform', `translate(0,${height})`)
-              .call(d3.axisBottom(xScale));
-
-            svg.append('g')
-              .call(d3.axisLeft(yScale));
-
-            d3.select('#chartContainer').node().scrollLeft = width;
-
+        // Line for Balance
+        svg.append('path')
+          .datum(totalBalance)
+          .attr('fill', 'none')
+          .attr('stroke', '#7E1717')
+          .attr('stroke-width', 3)
+          .attr('d', line);
+    
+        // Line for Average
+        svg.append('path')
+          .datum(averageBalance)
+          .attr('fill', 'none')
+          .attr('stroke', 'green')
+          .attr('stroke-width', 3)
+          .attr('d', line);
+    
+        // Appending Below Bar
+        svg.append('g')
+          .attr('transform', 'translate(0,' + height + ')')
+          .call(d3.axisBottom(xScale).tickFormat(function(d) {
+            return d;
+          }))
+          .selectAll('text')
+          .style('text-anchor', 'end')
+          .attr('dx', '-0.5em')
+          .attr('dy', '0.5em')
+          .attr('transform', 'rotate(-60)');
+    
+        // Appending the Side Bar
+        svg.append('g')
+          .call(d3.axisLeft(yScale))
+          .append('text')
+          .attr('x', -height / 2)
+          .attr('y', -margin.left)
+          .attr('transform', 'rotate(-90)')
+          .attr('fill', '#000')
+          .attr('text-anchor', 'middle')
+          .text('Balance');
+    
+        // Add circles for data points
+        svg.selectAll('circle')
+        .data(totalBalance)
+        .enter()
+        .append('circle')
+        .attr('cx', (d, i) => xScale(openingTimeList[i]) + xScale.bandwidth() / 2)
+        .attr('cy', (d) => yScale(d))
+        .attr('r', 4)
+        .attr('fill', '#7E1717')
+        .on('mouseover', function(d, i) {
+          d3.select(this).attr('r', 6).attr('fill', 'blue');
+          let xPosition = xScale(openingTimeList[i]) + xScale.bandwidth() / 2 + margin.left;
+          let yPosition = yScale(d) + margin.top;
+          tooltip.transition().duration(200).style('opacity', 0.9);
+          tooltip.html('Balance: ' + d)
+            .style('left', xPosition + 'px')
+            .style('top', yPosition + 'px');
+        })        
+        .on('mouseout', function() {
+          d3.select(this).attr('r', 4).attr('fill', '#7E1717');
+          tooltip.transition().duration(200).style('opacity', 0);
         });
-    </script>
+
+      };
+      d3.select('#widthInput').on('input', drawChart);
+      d3.select('#heightInput').on('input', drawChart);
+      drawChart();
+      d3.select('#applyButton').on('click', drawChart);
+    });
+  </script>
 {% endblock %}
