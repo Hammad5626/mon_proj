@@ -105,7 +105,6 @@ def admin_logout(request):
     logout(request)
     return redirect('index')
 
-
 def drawdown_calculation_view(request):
     template_name = 'drawdown.html'
 
@@ -152,7 +151,6 @@ def drawdown_calculation_view(request):
     context = {'drawdown_data': drawdown_data}
     return render(request, template_name, context)
 
-
 def calculate_accumulated_profit(data_entries, current_entry):
     accumulated_profit = 0
 
@@ -163,7 +161,6 @@ def calculate_accumulated_profit(data_entries, current_entry):
         accumulated_profit += entry.profit
 
     return accumulated_profit
-
 
 def get_lowest_point(base_currency, target_currency, opening_time):
     date = opening_time.date().strftime('%Y-%m-%d')

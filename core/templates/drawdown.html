@@ -31,7 +31,6 @@
     let contextData = JSON.parse('{{ context_json|safe }}');
     let drawdownData = contextData.drawdown_data;
 
-    // Extract labels and data for the chart
     let labels = drawdownData.map(function(drawdown) {
       return drawdown.date;
     });
@@ -39,7 +38,6 @@
       return drawdown.drawdown;
     });
 
-    // Create the chart
     let drawdownChart = new Chart(document.getElementById('drawdownChart'), {
       type: 'line',
       data: {
