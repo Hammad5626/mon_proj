@@ -62,16 +62,32 @@ def graph_view(request):
 
     return render(request, 'graph.html', {'context_json': context_json})
 
+def graph2_view(request):
+    data = DataModel.objects.values('profit', 'opening_price', 'opening_time')
+    profit_list = [entry['profit'] for entry in data]
+    opening_price_list = [entry['opening_price'] for entry in data]
+    opening_time_list = [entry['opening_time'].strftime('%Y-%m-%d') for entry in data]
 
+    context = {
+        'profit_list': profit_list,
+        'opening_price_list': opening_price_list,
+        'opening_time_list': opening_time_list,
+    }
+    
+    context_json = json.dumps(context)
+
+    return render(request, 'graph2.html', {'context_json': context_json})
+
+
+
+def index(request):
+    return render(request, 'base.html')
 
 class AdminLoginView(LoginView):
     template_name = 'admin_login.html'
 
     def get_form_class(self):
         return AdminLoginForm
-
-def index(request):
-    return render(request, 'base.html')
 
 def admin_logout(request):
     logout(request)

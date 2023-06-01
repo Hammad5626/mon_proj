@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block style %}
+  <style>
+    .chartWrapper {
+      position: relative;
+    }
+
+    .chartWrapper > svg {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .chartAreaWrapper {
+      width: 100%;
+      height: 500px;
+      overflow-x: scroll;
+      overflow-y: scroll;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="input-group mb-3">
+      <label class="input-group-text" for="widthInput">Width:</label>
+      <input type="text" class="form-control" id="widthInput" value="4000">
+      <label class="input-group-text" for="heightInput">Height:</label>
+      <input type="text" class="form-control" id="heightInput" value="300">
+    </div>
+    <div class="row chartWrapper">
+      <div class="mt-5 col-lg-12 chartAreaWrapper">
+        <h5>Percentage</h5>
+        <hr>
+        <svg id="additionalChart"></svg>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      let contextData = JSON.parse('{{ context_json|safe }}');
+      let profitList = contextData.profit_list;
+      let openingTimeList = contextData.opening_time_list;
+
+      let margin = { top: 20, right: 20, bottom: 30, left: 50 };
+      let width = (openingTimeList.length * 12) - margin.left - margin.right;
+      let height = 500 - margin.top - margin.bottom;
+
+      let additionalSvg = d3.select('#additionalChart')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+      let xScale = d3.scaleBand()
+        .domain(openingTimeList)
+        .range([0, width])
+        .padding(0.1);
+
+      let yScale = d3.scaleLinear()
+        .range([height, 0]);
+
+      let percentageTotalBalance = profitList.map((balance) => (balance / profitList[profitList.length - 1]) * 100);
+
+      let additionalLine = d3.line()
+        .x((d, i) => xScale(openingTimeList[i]))
+        .y((d) => yScale(d))
+        .curve(d3.curveMonotoneX);
+
+      let drawChart = () => {
+        additionalSvg.selectAll('*').remove();
+
+        let chartWidth = +d3.select('#widthInput').node().value;
+        let chartHeight = +d3.select('#heightInput').node().value;
+
+        additionalSvg.attr('width', chartWidth + margin.left + margin.right)
+          .attr('height', chartHeight + margin.top + margin.bottom);
+
+        xScale.range([0, chartWidth]);
+        yScale.domain([0, d3.max(percentageTotalBalance)]).range([chartHeight, 0]);
+
+        // Line for Percentage Total Balance
+        additionalSvg.append('path')
+          .datum(percentageTotalBalance)
+          .attr('fill', 'none')
+          .attr('stroke', 'blue')
+          .attr('stroke-width', 3)
+          .attr('d', additionalLine);
+
+        // Appending the Side Bar
+        additionalSvg.append('g')
+          .call(d3.axisLeft(yScale.copy().range([chartHeight, 0])))
+          .append('text')
+          .attr('x', -chartHeight / 2)
+          .attr('y', -margin.left)
+          .attr('transform', 'rotate(-90)')
+          .attr('fill', '#000')
+          .attr('text-anchor', 'middle')
+          .text('Percentage');
+      };
+
+      d3.select('#widthInput').on('input', drawChart);
+      d3.select('#heightInput').on('input', drawChart);
+      drawChart();
+      d3.select('#applyButton').on('click', drawChart);
+    });
+  </script>
+{% endblock %}
