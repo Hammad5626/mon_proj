@@ -32,12 +32,22 @@
                     </li>
                     <li class="nav-item">
                         {% if user.is_authenticated %}
-                        <a class="nav-link" href="{% url 'graph' %}">Graph</a>
+                        <a class="nav-link" href="{% url 'graph' %}">Balance Growth</a>
                         {% endif %}
                     </li>
                     <li class="nav-item">
                         {% if user.is_authenticated %}
-                        <a class="nav-link" href="{% url 'graph2' %}">Additional Graph</a>
+                        <a class="nav-link" href="{% url 'graph2' %}">Percentage Growth</a>
+                        {% endif %}
+                    </li>
+                    <li class="nav-item">
+                        {% if user.is_authenticated %}
+                        <a class="nav-link" href="{% url 'monthly_stats' %}">Monthly Stats</a>
+                        {% endif %}
+                    </li>
+                    <li class="nav-item">
+                        {% if user.is_authenticated %}
+                        <a class="nav-link" href="{% url 'drawdown' %}">Drawdown</a>
                         {% endif %}
                     </li>
                 </ul>
