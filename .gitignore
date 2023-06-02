@@ -5,6 +5,5 @@ db.sqlite3
 .DS_Store
 */.DS_Store
 */*/.DS_Store
-*.txt
 *.xlsx
 *.sqlite3
