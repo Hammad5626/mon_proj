@@ -1,4 +1,5 @@
-from django.contrib.auth.forms import AuthenticationForm
+from django import forms
 
-class AdminLoginForm(AuthenticationForm):
-    pass
+class AdminLoginForm(forms.Form):
+    username = forms.CharField(label='Username')
+    password = forms.CharField(label='Password', widget=forms.PasswordInput)

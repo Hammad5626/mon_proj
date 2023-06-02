@@ -1,5 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Successfully Uploaded Data</h1>
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="alert alert-success text-center" role="alert">
+        <h1 class="mb-4">Successfully Uploaded Data</h1>
+      </div>
+      <a href="{% url 'graph' %}" class="btn btn-primary">Balance Growth Graph</a>
+    </div>
+  </div>
+</div>
 {% endblock %}

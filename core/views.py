@@ -1,29 +1,75 @@
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout, authenticate
 from django.contrib.auth.views import LoginView
 from django.shortcuts import render,redirect
-from django.contrib.auth import logout
+from django.contrib import messages
+from django.conf import settings
 import pandas as pd
 import requests
 import json
+import os
 from .models import DataModel
 from .forms import AdminLoginForm
 
+# Index View
+def index(request):
+    return render(request, 'base.html')
+
+# Admin Login View
+def admin_login(request):
+    if request.method == 'POST':
+        form = AdminLoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                LoginView.as_view(request, user)
+                return redirect('index')
+            else:
+                messages.error(request, 'Invalid username or password.')
+    else:
+        form = AdminLoginForm()
+    
+    return render(request, 'admin_login.html', {'form': form})
+
+#Logout View
+@login_required
+def admin_logout(request):
+    logout(request)
+    return redirect('index')
+
+
+# Function to handle missing fields in excel file.
 def clean_value(value):
     return value if pd.notnull(value) else None
 
+# View to extract and Upload excel file data.
+@login_required
 def upload_excel(request):
     if request.method == 'POST':
         excel_file = request.FILES['excel_file']
         if excel_file.name.endswith('.xlsx'):
+            file_path = os.path.join(settings.MEDIA_ROOT, excel_file.name)
+
+            if os.path.exists(file_path):
+                # File with the same name already exists
+                return render(request, 'upload.html', {'file_exists': True})
+            else:
+                # Save the new file
+                with open(file_path, 'wb') as file:
+                    for chunk in excel_file.chunks():
+                        file.write(chunk)
             df = pd.read_excel(excel_file)
             for index, row in df.iterrows():
-                opening_time = clean_value(row.get('Opening Time'))
+                opening_time = (row.get('Opening Time'))
                 type = clean_value(row.get('Type'))
                 volume = clean_value(row.get('Volume'))
                 symbol = clean_value(row.get('Symbol'))
                 opening_price = clean_value(row.get('Opening Price'))
                 closing_time = clean_value(row.get('Closing Time'))
                 price = clean_value(row.get('Price'))
-                profit = clean_value(row.get('Profit'))
+                profit = row.get('Profit')
 
                 data = DataModel(
                     opening_time=opening_time,
@@ -42,6 +88,8 @@ def upload_excel(request):
             return render(request, 'error.html')
     return render(request, 'upload.html')
 
+# View to send data to graph.html
+@login_required
 def graph_view(request):
     data = DataModel.objects.values('profit', 'opening_price', 'opening_time')
     profit_list = [entry['profit'] for entry in data]
@@ -58,6 +106,8 @@ def graph_view(request):
 
     return render(request, 'graph.html', {'context_json': context_json})
 
+# View to send data to graph2.html
+@login_required
 def graph2_view(request):
     data = DataModel.objects.values('profit', 'opening_price', 'opening_time')
     profit_list = [entry['profit'] for entry in data]
@@ -74,6 +124,8 @@ def graph2_view(request):
 
     return render(request, 'graph2.html', {'context_json': context_json})
 
+# View to send data to monthly_stats.html
+@login_required
 def monthly_stats_view(request):
     template_name = 'monthly_stats.html'
 
@@ -92,19 +144,8 @@ def monthly_stats_view(request):
 
     return render(request, template_name, {'context_json': context_json})
 
-def index(request):
-    return render(request, 'base.html')
-
-class AdminLoginView(LoginView):
-    template_name = 'admin_login.html'
-
-    def get_form_class(self):
-        return AdminLoginForm
-
-def admin_logout(request):
-    logout(request)
-    return redirect('index')
-
+# View to calculate drawdown values
+@login_required
 def drawdown_calculation_view(request):
     template_name = 'drawdown.html'
 
@@ -151,6 +192,7 @@ def drawdown_calculation_view(request):
     context = {'drawdown_data': drawdown_data}
     return render(request, template_name, context)
 
+# Function to calculate accumulated profit for drawdown
 def calculate_accumulated_profit(data_entries, current_entry):
     accumulated_profit = 0
 
@@ -162,17 +204,15 @@ def calculate_accumulated_profit(data_entries, current_entry):
 
     return accumulated_profit
 
+# function to get lowest point from API call for drawdown calculation
 def get_lowest_point(base_currency, target_currency, opening_time):
     date = opening_time.date().strftime('%Y-%m-%d')
-    print(date)
-    print(base_currency)
     api_url = f"https://openexchangerates.org/api/historical/{date}.json?app_id=2d6c79cb6f4e4c349d2cc3590b3ac10f&base={base_currency}"
     response = requests.get(api_url)
 
     if response.status_code == 200:
         data = response.json()
         lowest_point = data["rates"][target_currency]
-        print("Lowest Point:",lowest_point)
         return lowest_point
     
     return None
