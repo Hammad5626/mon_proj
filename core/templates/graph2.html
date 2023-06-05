@@ -2,7 +2,7 @@
 
 {% block content %}
   <div class="container mt-5">
-    <div id="chartDiv" style="height: 500px;"></div>
+    <div id="chartDiv" style="width: 100%; height: calc(100vh - 100px);"></div>
   </div>
 
   <script>
@@ -11,12 +11,8 @@
       let profitList = contextData.profit_list;
       let openingTimeList = contextData.opening_time_list;
 
-      let margin = { top: 20, right: 20, bottom: 30, left: 50 };
-      let chartWidth = 4000 - margin.left - margin.right;
-      let chartHeight = 300 - margin.top - margin.bottom;
-
       let chart = am4core.create("chartDiv", am4charts.XYChart);
-      chart.height = 500;
+      chart.height = am4core.percent(100);
 
       let percentageTotalBalance = profitList.map((balance) => (balance / profitList[profitList.length - 1]) * 100);
 

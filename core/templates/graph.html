@@ -2,7 +2,7 @@
 
 {% block content %}
   <div class="container mt-5">
-    <div id="chartDiv" style="width: 100%; height: 500px;"></div>
+    <div id="chartDiv" style="width: 100%; height: calc(100vh - 100px);"></div>
   </div>
 
   <style>
@@ -28,7 +28,7 @@
 
       let chart = am4core.create("chartDiv", am4charts.XYChart);
       chart.width = am4core.percent(100);
-      chart.height = 500;
+      chart.height = am4core.percent(100);
 
       for (let i = 0; i < profitList.length; i++) {
         let currentBalance = totalBalance[i] + profitList[i];

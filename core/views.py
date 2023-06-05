@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import logout, authenticate
+from django.contrib.auth import logout, authenticate, login
 from django.contrib.auth.views import LoginView
 from django.shortcuts import render,redirect
 from django.contrib import messages
@@ -9,7 +9,7 @@ import requests
 import json
 import os
 from .models import DataModel
-from .forms import AdminLoginForm
+from .forms import AdminLoginForm, SignUpForm, SignInForm
 
 # Index View
 def index(request):
@@ -33,9 +33,37 @@ def admin_login(request):
     
     return render(request, 'admin_login.html', {'form': form})
 
+def signin(request):
+    if request.method == 'POST':
+        form = SignInForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, email=email, password=password)
+            if user is not None:
+                login(request, user)
+            else:
+                messages.error(request, 'Invalid email or password.')
+    else:
+        form = SignInForm()
+    return render(request, 'signin.html', {'form': form})
+
+
+def signup(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('index')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = SignUpForm()
+    return render(request, 'signup.html', {'form': form})
+
 #Logout View
-@login_required
-def admin_logout(request):
+def logout_view(request):
     logout(request)
     return redirect('index')
 
