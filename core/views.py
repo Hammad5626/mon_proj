@@ -50,8 +50,12 @@ def signup(request):
                 messages.error(request, message)
     else:
         form = SignUpForm()
-    return render(request, 'signup.html', {'form': form})
 
+    # Add a check for the existence of the form object before rendering the template
+    if form:
+        return render(request, 'signup.html', {'form': form})
+    else:
+        return render(request, 'signup.html')
 
 #Logout View
 def logout_view(request):

@@ -9,68 +9,92 @@
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="id_username" class="form-label">Username</label>
-                        {{ form.username }}
-                        {% if form.errors.username %}
-                            <div class="alert alert-danger" role="alert">
-                                {% for error in form.errors.username %}
+                        {% if form %}
+                            {{ form.username }}
+                            {% if form.errors.username %}
+                            {% for error in form.errors.password2 %}
+                            {% if error != 'This field is required.' %}
+                                <div class="alert alert-danger" role="alert">
                                     {{ error }}
-                                {% endfor %}
-                            </div>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                            {% endif %}
                         {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="id_first_name" class="form-label">First Name</label>
-                        {{ form.first_name }}
-                        {% if form.errors.first_name %}
-                            <div class="alert alert-danger" role="alert">
-                                {% for error in form.errors.first_name %}
+                        {% if form %}
+                            {{ form.first_name }}
+                            {% if form.errors.first_name %}
+                            {% for error in form.errors.password2 %}
+                            {% if error != 'This field is required.' %}
+                                <div class="alert alert-danger" role="alert">
                                     {{ error }}
-                                {% endfor %}
-                            </div>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                            {% endif %}
                         {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="id_last_name" class="form-label">Last Name</label>
-                        {{ form.last_name }}
-                        {% if form.errors.last_name %}
-                            <div class="alert alert-danger" role="alert">
-                                {% for error in form.errors.last_name %}
+                        {% if form %}
+                            {{ form.last_name }}
+                            {% if form.errors.last_name %}
+                            {% for error in form.errors.password2 %}
+                            {% if error != 'This field is required.' %}
+                                <div class="alert alert-danger" role="alert">
                                     {{ error }}
-                                {% endfor %}
-                            </div>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                            {% endif %}
                         {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="id_email" class="form-label">Email</label>
-                        {{ form.email }}
-                        {% if form.errors.email %}
-                            <div class="alert alert-danger" role="alert">
-                                {% for error in form.errors.email %}
+                        {% if form %}
+                            {{ form.email }}
+                            {% if form.errors.email %}
+                            {% for error in form.errors.password2 %}
+                            {% if error != 'This field is required.' %}
+                                <div class="alert alert-danger" role="alert">
                                     {{ error }}
-                                {% endfor %}
-                            </div>
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                            {% endif %}
                         {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="id_password1" class="form-label">Password</label>
-                        {{ form.password1 }}
-                        {% if form.errors.password1 %}
-                            <div class="alert alert-danger" role="alert">
-                                {% for error in form.errors.password1 %}
-                                    {{ error }}
+                        {% if form %}
+                            {{ form.password1 }}
+                            {% if form.errors.password1 %}
+                                {% for error in form.errors.password2 %}
+                                    {% if error != 'This field is required.' %}
+                                        <div class="alert alert-danger" role="alert">
+                                            {{ error }}
+                                        </div>
+                                    {% endif %}
                                 {% endfor %}
-                            </div>
+                            {% endif %}
                         {% endif %}
                     </div>
                     <div class="mb-3">
                         <label for="id_password2" class="form-label">Repeat Password</label>
-                        {{ form.password2 }}
-                        {% if form.errors.password2 %}
-                            <div class="alert alert-danger" role="alert">
+                        {% if form %}
+                            {{ form.password2 }}
+                            {% if form.errors.password2 %}
                                 {% for error in form.errors.password2 %}
-                                    {{ error }}
+                                    {% if error != 'This field is required.' %}
+                                        <div class="alert alert-danger" role="alert">
+                                            {{ error }}
+                                        </div>
+                                    {% endif %}
                                 {% endfor %}
-                            </div>
+                            {% endif %}
                         {% endif %}
                     </div>
                     <div class="text-center">
