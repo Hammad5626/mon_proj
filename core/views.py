@@ -1,6 +1,5 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout, authenticate, login
-from django.contrib.auth.views import LoginView
 from django.shortcuts import render,redirect
 from django.contrib import messages
 from django.conf import settings
@@ -9,45 +8,33 @@ import requests
 import json
 import os
 from .models import DataModel
-from .forms import AdminLoginForm, SignUpForm, SignInForm
+from .forms import SignUpForm, SignInForm
 
 # Index View
 def index(request):
     return render(request, 'base.html')
 
-# Admin Login View
-def admin_login(request):
-    if request.method == 'POST':
-        form = AdminLoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                LoginView.as_view(request, user)
-                return redirect('index')
-            else:
-                messages.error(request, 'Invalid username or password.')
-    else:
-        form = AdminLoginForm()
-    
-    return render(request, 'admin_login.html', {'form': form})
-
 def signin(request):
     if request.method == 'POST':
         form = SignInForm(request.POST)
         if form.is_valid():
-            email = form.cleaned_data.get('email')
+            username_or_email = form.cleaned_data.get('username_or_email')
             password = form.cleaned_data.get('password')
-            user = authenticate(request, email=email, password=password)
+
+            if '@' in username_or_email:
+                user = authenticate(request, email=username_or_email, password=password)
+            else:
+                user = authenticate(request, username=username_or_email, password=password)
+
             if user is not None:
                 login(request, user)
+                return redirect('index')
             else:
                 messages.error(request, 'Invalid email or password.')
     else:
         form = SignInForm()
+    
     return render(request, 'signin.html', {'form': form})
-
 
 def signup(request):
     if request.method == 'POST':
@@ -57,10 +44,14 @@ def signup(request):
             login(request, user)
             return redirect('index')
         else:
-            messages.error(request, 'Please correct the errors below.')
+            # Retrieve the form errors and pass them to the template
+            error_messages = form.errors.values()
+            for message in error_messages:
+                messages.error(request, message)
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
+
 
 #Logout View
 def logout_view(request):
@@ -73,7 +64,7 @@ def clean_value(value):
     return value if pd.notnull(value) else None
 
 # View to extract and Upload excel file data.
-@login_required
+@user_passes_test(lambda u: u.is_staff)
 def upload_excel(request):
     if request.method == 'POST':
         excel_file = request.FILES['excel_file']

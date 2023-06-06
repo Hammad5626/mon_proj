@@ -7,14 +7,12 @@
                 <h2 class="text-center">Sign In</h2>
                 <form method="POST">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="id_email" class="form-label">Email</label>
-                        {{ form.email }}
-                    </div>
-                    <div class="mb-3">
-                        <label for="id_password" class="form-label">Password</label>
-                        {{ form.password }}
-                    </div>
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                    {% endfor %}
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary">Sign In</button>
                     </div>
