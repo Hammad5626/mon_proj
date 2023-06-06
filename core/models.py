@@ -10,7 +10,7 @@ class DataModel(models.Model):
                 name='composite_pk',
             ),
         ]
-
+        
     opening_time = models.DateTimeField(primary_key=True)
     type = models.CharField(max_length=100)
     volume = models.FloatField(null=True)
