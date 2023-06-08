@@ -1,17 +1,21 @@
 from django.db import models
-import datetime
+from datetime import timedelta
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
+class UserModel(models.Model):
+    name = models.CharField(max_length=128)
+    is_favorite = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+    
 class DataModel(models.Model):
     class Meta:
         ordering = ('-opening_time',)
-        constraints = [
-            models.UniqueConstraint(
-                fields=['opening_time', 'profit'],
-                name='composite_pk',
-            ),
-        ]
         
-    opening_time = models.DateTimeField(primary_key=True)
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    opening_time = models.DateTimeField()
     type = models.CharField(max_length=100)
     volume = models.FloatField(null=True)
     symbol = models.CharField(max_length=100, null=True)
@@ -24,7 +28,15 @@ class DataModel(models.Model):
     def __str__(self):
         return f"{self.opening_time} | {self.symbol} | {self.type}"
 
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            DataModel.objects.filter(opening_time__gte=self.opening_time).update(opening_time=models.F('opening_time') + datetime.timedelta(microseconds=1))
-        super().save(*args, **kwargs)
+@receiver(pre_save, sender=DataModel)
+def create_new_entry(sender, instance, **kwargs):
+    existing_entry = DataModel.objects.filter(
+        user=instance.user,
+        opening_time=instance.opening_time,
+        profit=instance.profit
+    ).exists()
+
+    if existing_entry:
+        # If an entry already exists, create a new instance with an incremented opening_time
+        instance.opening_time += timedelta(microseconds=1)
+        instance.pk = None  # Clear the primary key to force

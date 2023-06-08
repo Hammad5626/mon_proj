@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            {% for user in favorite_users %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card bg-dark text-white shadow">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ user.name }}</h5>
+                            <p class="card-text">Username: User@Name</p>
+                            <span class="favorite-icon favorited" data-user-id="{{ user.id }}">
+                                <i class="fas fa-star"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No favorite users found.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+    <script>
+        // AJAX request to toggle favorite status
+        document.addEventListener('DOMContentLoaded', function() {
+            const favoriteIcons = document.querySelectorAll('.favorite-icon');
+            favoriteIcons.forEach(function(icon) {
+                icon.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    const isFavorite = false;  // Set isFavorite to false for unfavorite functionality
+
+                    fetch('{% url 'toggle_favorite' %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': '{{ csrf_token }}',
+                        },
+                        body: 'user_id=' + userId + '&is_favorite=' + isFavorite,
+                    })
+                    .then(function(response) {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('Request failed.');
+                        }
+                    })
+                    .then(function(data) {
+                        if (data.status === 'success') {
+                            // Remove the favorite user from the DOM
+                            const card = icon.closest('.card');
+                            card.parentNode.removeChild(card);
+                        } else {
+                            console.error(data.message);
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error(error);
+                    });
+                });
+            });
+        });
+    </script>
+{% endblock %}

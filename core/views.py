@@ -1,18 +1,56 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import logout, authenticate, login
+from django.contrib.auth import logout, authenticate, login, get_user_model
 from django.shortcuts import render,redirect
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.conf import settings
+from datetime import timedelta
 import pandas as pd
 import requests
 import json
 import os
-from .models import DataModel
+from .models import DataModel, UserModel
 from .forms import SignUpForm, SignInForm
 
+# Function to handle missing fields in excel file.
+def clean_value(value):
+    return value if pd.notnull(value) else None
+
+def get_data(user):
+    data = DataModel.objects.filter(user=user).values('profit', 'opening_price', 'opening_time')
+    profit_list = [entry['profit'] for entry in data]
+    opening_price_list = [entry['opening_price'] for entry in data]
+    opening_time_list = [entry['opening_time'].strftime('%Y-%m-%d') for entry in data]
+
+    context = {
+        'profit_list': profit_list,
+        'opening_price_list': opening_price_list,
+        'opening_time_list': opening_time_list,
+    }
+    return context
+
+@login_required
+def user_data(request, user_id):
+    try:
+        user = UserModel.objects.get(id=user_id)
+        context = get_data(user)
+        context_json = json.dumps(context)
+        return render(request, 'user_data.html', {'user': user, 'context_json': context_json})
+    except UserModel.DoesNotExist:
+        return render(request, 'user_not_found.html')
+    
 # Index View
 def index(request):
     return render(request, 'base.html')
+
+def user_list(request):
+    users = UserModel.objects.all()
+    return render(request, 'user_list.html', {'users': users})
+
+def favorite_users(request):
+    favorite_users = UserModel.objects.filter(is_favorite=True)
+    return render(request, 'favourite_users.html', {'favorite_users': favorite_users})
 
 def signin(request):
     if request.method == 'POST':
@@ -62,27 +100,24 @@ def logout_view(request):
     logout(request)
     return redirect('index')
 
-
-# Function to handle missing fields in excel file.
-def clean_value(value):
-    return value if pd.notnull(value) else None
-
 # View to extract and Upload excel file data.
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(lambda usr: usr.is_staff)
 def upload_excel(request):
     if request.method == 'POST':
         excel_file = request.FILES['excel_file']
+        user_name = request.POST['user_name']
         if excel_file.name.endswith('.xlsx'):
+            
+            # To save file in media folder
             file_path = os.path.join(settings.MEDIA_ROOT, excel_file.name)
-
             if os.path.exists(file_path):
-                # File with the same name already exists
                 return render(request, 'upload.html', {'file_exists': True})
             else:
-                # Save the new file
                 with open(file_path, 'wb') as file:
                     for chunk in excel_file.chunks():
                         file.write(chunk)
+
+            # Reading and writing data on database
             df = pd.read_excel(excel_file)
             for index, row in df.iterrows():
                 opening_time = (row.get('Opening Time'))
@@ -93,8 +128,9 @@ def upload_excel(request):
                 closing_time = clean_value(row.get('Closing Time'))
                 price = clean_value(row.get('Price'))
                 profit = row.get('Profit')
-
+                user, _ = UserModel.objects.get_or_create(name=user_name)
                 data = DataModel(
+                    user=user,
                     opening_time=opening_time,
                     type=type,
                     volume=volume,
@@ -106,66 +142,47 @@ def upload_excel(request):
                 )
                 data.save()
 
+            # If upload is successful
             return render(request, 'success.html')
+        # If not excel file
         else:
             return render(request, 'error.html')
     return render(request, 'upload.html')
 
-# View to send data to graph.html
-@login_required
-def graph_view(request):
-    data = DataModel.objects.values('profit', 'opening_price', 'opening_time')
-    profit_list = [entry['profit'] for entry in data]
-    opening_price_list = [entry['opening_price'] for entry in data]
-    opening_time_list = [entry['opening_time'].strftime('%Y-%m-%d') for entry in data]
+@require_POST
+def toggle_favorite(request):
+    user_id = request.POST.get('user_id')
+    is_favorite = request.POST.get('is_favorite')
 
-    context = {
-        'profit_list': profit_list,
-        'opening_price_list': opening_price_list,
-        'opening_time_list': opening_time_list,
-    }
-    
-    context_json = json.dumps(context)
+    User = get_user_model()
 
-    return render(request, 'graph.html', {'context_json': context_json})
+    try:
+        user = User.objects.get(id=user_id)
+        user.is_favorite = is_favorite.lower() == 'true'  # Convert string to boolean
+        user.save()
+        return JsonResponse({'status': 'success'})
+    except User.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'User not found'})
 
-# View to send data to graph2.html
-@login_required
-def graph2_view(request):
-    data = DataModel.objects.values('profit', 'opening_price', 'opening_time')
-    profit_list = [entry['profit'] for entry in data]
-    opening_price_list = [entry['opening_price'] for entry in data]
-    opening_time_list = [entry['opening_time'].strftime('%Y-%m-%d') for entry in data]
+# @login_required
+# def graph_view(request, user_id):
+#     user = UserModel.objects.get(id=user_id)
+#     context = get_data(user)
+#     context_json = json.dumps(context)
+#     return render(request, 'graph.html', {'context_json': context_json})
 
-    context = {
-        'profit_list': profit_list,
-        'opening_price_list': opening_price_list,
-        'opening_time_list': opening_time_list,
-    }
-    
-    context_json = json.dumps(context)
+# @login_required
+# def graph2_view(request):
+#     context = get_data()
+#     context_json = json.dumps(context)
+#     return render(request, 'graph2.html', {'context_json': context_json})
 
-    return render(request, 'graph2.html', {'context_json': context_json})
-
-# View to send data to monthly_stats.html
-@login_required
-def monthly_stats_view(request):
-    template_name = 'monthly_stats.html'
-
-    data = DataModel.objects.values('profit', 'opening_price', 'opening_time')
-    profit_list = [entry['profit'] for entry in data]
-    opening_price_list = [entry['opening_price'] for entry in data]
-    opening_time_list = [entry['opening_time'].strftime('%Y-%m-%d') for entry in data]
-
-    context = {
-        'profit_list': profit_list,
-        'opening_price_list': opening_price_list,
-        'opening_time_list': opening_time_list,
-    }
-
-    context_json = json.dumps(context)
-
-    return render(request, template_name, {'context_json': context_json})
+# @login_required
+# def monthly_stats_view(request):
+#     template_name = 'monthly_stats.html'
+#     context = get_data()
+#     context_json = json.dumps(context)
+#     return render(request, template_name, {'context_json': context_json})
 
 # View to calculate drawdown values
 @login_required
@@ -203,12 +220,14 @@ def drawdown_calculation_view(request):
             drawdown_percentage = (drawdown / account_balance) * 100
 
             drawdown_entry = {
+                'date': opening_time.date(),
                 'opening_price': opening_price,
                 'lowest_point': lowest_point,
                 'volume': volume,
                 'drawdown': drawdown,
                 'drawdown_percentage': drawdown_percentage,
             }
+
 
             drawdown_data.append(drawdown_entry)
 
@@ -239,3 +258,19 @@ def get_lowest_point(base_currency, target_currency, opening_time):
         return lowest_point
     
     return None
+
+#----------------------------Just Experimenting-----------------------------------------------    
+    # base_currency = "USD"
+    # data_entries = DataModel.objects.all()
+    # start_date = min([entry.opening_time.date() for entry in data_entries]) - timedelta(days=30)
+    # end_date = max([entry.opening_time.date() for entry in data_entries]) + timedelta(days=30)
+    # api_url = f"https://openexchangerates.org/api/time-series.json?app_id=2d6c79cb6f4e4c349d2cc3590b3ac10f&base={base_currency}&start={start_date}&end={end_date}"
+    # print('---------> ' + str(start_date))
+    # print('---------> ' + str(end_date))
+    # response = requests.get(api_url)
+    # data = response.json()
+    # print('Status ---------> ' + str(response.status_code))
+    # print('---------> ' + str(data))
+#----------------------------------------------------------------------------------------------
+
+# <!-------------------------- End of File ------------------------------->

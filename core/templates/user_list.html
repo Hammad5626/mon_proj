@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <style>
+        a {
+            text-decoration: none;
+        }
+        
+        .card {
+            transition: transform 0.3s;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .card:hover {
+            transform: rotateY(10deg);
+        }
+
+        .card-body {
+            backface-visibility: hidden;
+        }
+    </style>
+
+    <div class="container">
+        <div class="row">
+            {% for user in users %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <a href="{% url 'user_data' user.id %}">
+                        <div class="card bg-dark text-white shadow">
+                            <div class="card-body">
+                                <span class="favorite-icon {% if user.is_favorite %}favorited{% endif %}" data-user-id="{{ user.id }}">
+                                    {% if user.is_favorite %}
+                                        &#9733;
+                                    {% else %}
+                                        &#9734;
+                                    {% endif %}
+                                </span>
+                                <h5 class="card-title">{{ user.name }}</h5>
+                                <p class="card-text">Username: User@Name</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
