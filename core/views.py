@@ -164,26 +164,6 @@ def toggle_favorite(request):
     except User.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'User not found'})
 
-# @login_required
-# def graph_view(request, user_id):
-#     user = UserModel.objects.get(id=user_id)
-#     context = get_data(user)
-#     context_json = json.dumps(context)
-#     return render(request, 'graph.html', {'context_json': context_json})
-
-# @login_required
-# def graph2_view(request):
-#     context = get_data()
-#     context_json = json.dumps(context)
-#     return render(request, 'graph2.html', {'context_json': context_json})
-
-# @login_required
-# def monthly_stats_view(request):
-#     template_name = 'monthly_stats.html'
-#     context = get_data()
-#     context_json = json.dumps(context)
-#     return render(request, template_name, {'context_json': context_json})
-
 # View to calculate drawdown values
 @login_required
 def drawdown_calculation_view(request):
