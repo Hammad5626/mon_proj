@@ -18,14 +18,14 @@ def clean_value(value):
     return value if pd.notnull(value) else None
 
 def get_data(user):
-    data = DataModel.objects.filter(user=user).values('profit', 'opening_price', 'opening_time')
+    data = DataModel.objects.filter(user=user).values('profit', 'opening_price', 'opening_time','type')
     profit_list = [entry['profit'] for entry in data]
-    opening_price_list = [entry['opening_price'] for entry in data]
+    type_list = [entry['type'] for entry in data]
     opening_time_list = [entry['opening_time'].strftime('%Y-%m-%d') for entry in data]
 
     context = {
         'profit_list': profit_list,
-        'opening_price_list': opening_price_list,
+        'type_list': type_list,
         'opening_time_list': opening_time_list,
     }
     return context
