@@ -8,6 +8,7 @@ from django.conf import settings
 from datetime import timedelta
 import pandas as pd
 import requests
+import datetime
 import json
 import os
 from .models import DataModel, UserModel
@@ -17,16 +18,25 @@ from .forms import SignUpForm, SignInForm
 def clean_value(value):
     return value if pd.notnull(value) else None
 
+def parse_datetime(value):
+    date_formats = ["%d.%m.%y %H:%M", "%d.%m.%Y %H:%M", "%m/%d/%Y %H:%M"]  # Add more date formats if needed
+    for format in date_formats:
+        try:
+            return datetime.datetime.strptime(value, format)
+        except ValueError:
+            pass
+    raise ValueError("Invalid datetime format")
+
 def get_data(user):
-    data = DataModel.objects.filter(user=user).values('profit', 'opening_price', 'opening_time','type')
+    data = DataModel.objects.filter(user=user).values('profit', 'opening_price', 'time','type')
     profit_list = [entry['profit'] for entry in data]
     type_list = [entry['type'] for entry in data]
-    opening_time_list = [entry['opening_time'].strftime('%Y-%m-%d') for entry in data]
+    time_list = [entry['time'].strftime('%Y-%m-%d') for entry in data]
 
     context = {
         'profit_list': profit_list,
         'type_list': type_list,
-        'opening_time_list': opening_time_list,
+        'time_list': time_list,
     }
     return context
 
@@ -120,25 +130,37 @@ def upload_excel(request):
             # Reading and writing data on database
             df = pd.read_excel(excel_file)
             for index, row in df.iterrows():
-                opening_time = (row.get('Opening Time'))
+                time = row.get('Time')
+                try:
+                    time = parse_datetime(time)
+                except ValueError as e:
+                    return render(request, 'error.html', {'error_message': str(e)})
                 type = clean_value(row.get('Type'))
                 volume = clean_value(row.get('Volume'))
                 symbol = clean_value(row.get('Symbol'))
                 opening_price = clean_value(row.get('Opening Price'))
+                volume_spent = clean_value(row.get('Volume Spent'))
                 closing_time = clean_value(row.get('Closing Time'))
                 price = clean_value(row.get('Price'))
+                commision = clean_value(row.get('Commision'))
+                swap = clean_value(row.get('Swap'))
                 profit = row.get('Profit')
+                net_profit = row.get('Net Profit')
                 user, _ = UserModel.objects.get_or_create(name=user_name)
                 data = DataModel(
                     user=user,
-                    opening_time=opening_time,
+                    time=time,
                     type=type,
                     volume=volume,
                     symbol=symbol,
                     opening_price=opening_price,
+                    volume_spent = volume_spent,
                     closing_time=closing_time,
                     price=price,
-                    profit=profit
+                    commision=commision,
+                    swap=swap,
+                    profit=profit,
+                    net_profit=net_profit,
                 )
                 data.save()
 

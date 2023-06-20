@@ -1,0 +1,17 @@
+a {
+    text-decoration: none;
+}
+
+.card {
+    transition: transform 0.3s;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+}
+
+.card:hover {
+    transform: scale(1.1) skewX(-10deg);
+}
+
+.card-body {
+    backface-visibility: hidden;
+}
