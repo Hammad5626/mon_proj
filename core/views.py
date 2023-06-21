@@ -19,13 +19,14 @@ def clean_value(value):
     return value if pd.notnull(value) else None
 
 def parse_datetime(value):
-    date_formats = ["%d.%m.%y %H:%M", "%d.%m.%Y %H:%M", "%m/%d/%Y %H:%M"]  # Add more date formats if needed
-    for format in date_formats:
-        try:
-            return datetime.datetime.strptime(value, format)
-        except ValueError:
-            pass
-    raise ValueError("Invalid datetime format")
+    if value != None:
+        date_formats = ["%d.%m.%y %H:%M", "%d.%m.%Y %H:%M", "%m/%d/%Y %H:%M"]
+        for format in date_formats:
+            try:
+                return datetime.datetime.strptime(value, format)
+            except ValueError:
+                pass
+        raise ValueError("Invalid datetime format")
 
 def get_data(user):
     data = DataModel.objects.filter(user=user).values('profit', 'opening_price', 'time','type')
@@ -132,17 +133,21 @@ def upload_excel(request):
             for index, row in df.iterrows():
                 time = row.get('Time')
                 try:
-                    time = parse_datetime(time)
+                    time = clean_value(parse_datetime(time))
                 except ValueError as e:
                     return render(request, 'error.html', {'error_message': str(e)})
                 type = clean_value(row.get('Type'))
                 volume = clean_value(row.get('Volume'))
                 symbol = clean_value(row.get('Symbol'))
-                opening_price = clean_value(row.get('Opening Price'))
-                volume_spent = clean_value(row.get('Volume Spent'))
-                closing_time = clean_value(row.get('Closing Time'))
+                opening_price = clean_value(row.get('Price'))
+                volume_spent = clean_value(row.get('Volume'))
+                closing_time = row.get('Time')
+                try:
+                    closing_time = clean_value(parse_datetime(closing_time))
+                except ValueError as e:
+                    return render(request, 'error.html', {'error_message': str(e)})
                 price = clean_value(row.get('Price'))
-                commision = clean_value(row.get('Commision'))
+                commision = clean_value(row.get('Commission'))
                 swap = clean_value(row.get('Swap'))
                 profit = row.get('Profit')
                 net_profit = row.get('Net Profit')
@@ -208,13 +213,13 @@ def drawdown_calculation_view(request):
         else:
             print("Invalid symbol")
         contract_size = 100000
-        opening_time = data_entry.opening_time
+        time = data_entry.time
 
         accumulated_profit = calculate_accumulated_profit(data_entries, data_entry)
 
         account_balance += accumulated_profit
 
-        lowest_point = get_lowest_point(base_currency, target_currency, opening_time)
+        lowest_point = get_lowest_point(base_currency, target_currency, time)
 
         if lowest_point is not None:
             drawdown = (opening_price - lowest_point) * volume * contract_size
@@ -222,7 +227,7 @@ def drawdown_calculation_view(request):
             drawdown_percentage = (drawdown / account_balance) * 100
 
             drawdown_entry = {
-                'date': opening_time.date(),
+                'date': time.date(),
                 'opening_price': opening_price,
                 'lowest_point': lowest_point,
                 'volume': volume,
@@ -249,8 +254,8 @@ def calculate_accumulated_profit(data_entries, current_entry):
     return accumulated_profit
 
 # function to get lowest point from API call for drawdown calculation
-def get_lowest_point(base_currency, target_currency, opening_time):
-    date = opening_time.date().strftime('%Y-%m-%d')
+def get_lowest_point(base_currency, target_currency, time):
+    date = time.date().strftime('%Y-%m-%d')
     api_url = f"https://openexchangerates.org/api/historical/{date}.json?app_id=2d6c79cb6f4e4c349d2cc3590b3ac10f&base={base_currency}"
     response = requests.get(api_url)
 
@@ -264,8 +269,8 @@ def get_lowest_point(base_currency, target_currency, opening_time):
 #----------------------------Just Experimenting-----------------------------------------------    
     # base_currency = "USD"
     # data_entries = DataModel.objects.all()
-    # start_date = min([entry.opening_time.date() for entry in data_entries]) - timedelta(days=30)
-    # end_date = max([entry.opening_time.date() for entry in data_entries]) + timedelta(days=30)
+    # start_date = min([entry.time.date() for entry in data_entries]) - timedelta(days=30)
+    # end_date = max([entry.time.date() for entry in data_entries]) + timedelta(days=30)
     # api_url = f"https://openexchangerates.org/api/time-series.json?app_id=2d6c79cb6f4e4c349d2cc3590b3ac10f&base={base_currency}&start={start_date}&end={end_date}"
     # print('---------> ' + str(start_date))
     # print('---------> ' + str(end_date))
