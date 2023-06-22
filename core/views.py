@@ -29,8 +29,9 @@ def parse_datetime(value):
         raise ValueError("Invalid datetime format")
 
 def get_data(user):
-    data = DataModel.objects.filter(user=user).values('profit', 'opening_price', 'time','type')
+    data = DataModel.objects.filter(user=user).values('profit', 'time', 'type', 'net_profit')
     profit_list = [entry['profit'] for entry in data]
+    net_profit_list = [entry['net_profit'] for entry in data]
     type_list = [entry['type'] for entry in data]
     time_list = [entry['time'].strftime('%Y-%m-%d') for entry in data]
 
@@ -38,6 +39,7 @@ def get_data(user):
         'profit_list': profit_list,
         'type_list': type_list,
         'time_list': time_list,
+        'net_profit_list': net_profit_list,
     }
     return context
 

@@ -1,25 +1,33 @@
 document.addEventListener('DOMContentLoaded', function() {
     let contextData = contextJson;
     let profitList = contextData.profit_list;
+    let netProfitList = contextData.net_profit_list;
+    let typeList = contextData.type_list;
     let openingTimeList = contextData.time_list;
     let totalBalance = [profitList[0]];
-
-    for (let i = 0; i < profitList.length; i++) {
-      if (i !== 0) {
-        let currentBalance = totalBalance[i - 1] + profitList[i];
-        totalBalance.push(currentBalance);
-      }
-    }
-
     let monthlyData = {};
     let yearlyData = {};
     let totalProfit = 0;
+    let currentBalance = 0;
+
+    for (let i = 0; i < profitList.length; i++) {
+      if (i !== 0 && typeList[i] !== "Balance") {
+        currentBalance = totalBalance[i - 1] + netProfitList[i];
+        totalBalance.push(currentBalance);
+      }
+      else if(i !== 0 && typeList[i] === "Balance") {
+        currentBalance = totalBalance[i - 1] + profitList[i];
+        totalBalance.push(currentBalance);
+      }
+    }
 
     for (let i = 0; i < openingTimeList.length; i++) {
       let dateComponents = openingTimeList[i].split('-');
       let month = dateComponents[1];
       let year = dateComponents[0];
-      let profit = profitList[i];
+      let profit = 0;
+      if (typeList[i] !== "Balance"){profit = netProfitList[i];}
+      else{profit = profitList[i]}
       let currentBalance = totalBalance[i];
       let monthYear = month + '-' + year;
       
