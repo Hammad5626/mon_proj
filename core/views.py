@@ -152,7 +152,7 @@ def upload_excel(request):
                 commision = clean_value(row.get('Commission'))
                 swap = clean_value(row.get('Swap'))
                 profit = row.get('Profit')
-                net_profit = row.get('Net Profit')
+                net_profit = row.get('Net Profit:\n\nProfit - Commision - Swap')
                 user, _ = UserModel.objects.get_or_create(name=user_name)
                 data = DataModel(
                     user=user,
