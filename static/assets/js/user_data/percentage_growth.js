@@ -4,27 +4,36 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeChart() {
         let contextData = contextJson;
         let profitList = contextData.profit_list;
+        let typeList = contextData.type_list;
+        let netProfitList = contextData.net_profit_list;
         let openingTimeList = contextData.time_list;
         let totalBalance = [profitList[0]];
         let percentageTotalBalance = [];
+        let percentage = 1;
         
         let chart = am4core.create("chartDiv2", am4charts.XYChart);
         chart.height = am4core.percent(100);
 
         for (let i = 0; i < profitList.length; i++) {
-        let percentage = 0;
-        let currentBalance;
-        if(i !== 0){
-            currentBalance = totalBalance[i-1] + profitList[i];
-            totalBalance.push(currentBalance);
+            let currentBalance;
+            if (i !== 0 && typeList[i] !== "Balance") {
+                currentBalance = totalBalance[i - 1] + netProfitList[i];
+                totalBalance.push(currentBalance);
+              }
+              else if(i !== 0 && typeList[i] === "Balance") {
+                currentBalance = totalBalance[i - 1] + profitList[i];
+                totalBalance.push(currentBalance);
+              }
+
+            if (i !== 0) {
+                result = ((currentBalance - totalBalance[i-1]) / totalBalance[i-1]) * 100;
+                result = (result / 100) +1;
+                percentage *= result;
+            }
+            let newpercent = (percentage - 1) * 100;
+            percentageTotalBalance.push(newpercent);
         }
 
-        if (i !== 0) {
-            percentage = ((currentBalance - totalBalance[i-1]) / totalBalance[i-1]) * 100;
-        }
-        percentageTotalBalance.push(percentage);
-        }
-        
         chart.data = openingTimeList.map((openingTime, index) => ({
             category: openingTime,
             percentage: percentageTotalBalance[index]

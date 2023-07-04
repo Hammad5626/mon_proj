@@ -5,7 +5,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.conf import settings
-from datetime import timedelta
+from datetime import timedelta, datetime
+from collections import defaultdict
 import pandas as pd
 import requests
 import datetime
@@ -34,7 +35,6 @@ def get_data(user):
     net_profit_list = [entry['net_profit'] for entry in data]
     type_list = [entry['type'] for entry in data]
     time_list = [entry['time'].strftime('%Y-%m-%d') for entry in data]
-
     context = {
         'profit_list': profit_list,
         'type_list': type_list,
@@ -123,21 +123,24 @@ def upload_excel(request):
             
             # To save file in media folder
             file_path = os.path.join(settings.MEDIA_ROOT, excel_file.name)
-            if os.path.exists(file_path):
-                return render(request, 'upload.html', {'file_exists': True})
-            else:
-                with open(file_path, 'wb') as file:
-                    for chunk in excel_file.chunks():
-                        file.write(chunk)
+            with open(file_path, 'wb') as file:
+                for chunk in excel_file.chunks():
+                    file.write(chunk)
 
             # Reading and writing data on database
             df = pd.read_excel(excel_file)
+            time_count = defaultdict(int)  # Dictionary to keep track of repeated time values
             for index, row in df.iterrows():
                 time = row.get('Time')
                 try:
                     time = clean_value(parse_datetime(time))
                 except ValueError as e:
                     return render(request, 'error.html', {'error_message': str(e)})
+
+                time_str = str(time)
+                if time_count[time_str] > 0:
+                    time -= timedelta(milliseconds=time_count[time_str])
+                time_count[time_str] += 1
                 type = clean_value(row.get('Type'))
                 volume = clean_value(row.get('Volume'))
                 symbol = clean_value(row.get('Symbol'))

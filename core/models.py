@@ -12,7 +12,7 @@ class DataModel(models.Model):
         ordering = ('time',)
         
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
-    time = models.DateTimeField()
+    time = models.DateTimeField(primary_key=True)
     type = models.CharField(max_length=100)
     volume = models.FloatField(null=True, blank=True)
     symbol = models.CharField(max_length=100, null=True, blank=True)

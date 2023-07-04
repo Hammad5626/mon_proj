@@ -1,19 +1,13 @@
-// JavaScript code for user_data.js
-
-// Wait for the DOM to load
 document.addEventListener('DOMContentLoaded', function() {
   initializeChart();
 
-  // Function to initialize the chart
   function initializeChart() {
-    // Parse JSON data
     let contextData = contextJson;
     let profitList = contextData.profit_list;
     let typeList = contextData.type_list;
     let openingTimeList = contextData.time_list;
     let totalBalance = [profitList[0]];
 
-    // Calculate total balance
     for (let i = 0; i < profitList.length; i++) {
       if (i != 0) {
         let currentBalance = totalBalance[i - 1] + profitList[i];
@@ -21,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    // Calculate average balance
     let averageBalance = totalBalance.map((balance, index) => {
       let sum = totalBalance.slice(0, index + 1).reduce((acc, val) => acc + val, 0);
       return sum / (index + 1);
@@ -33,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
     base.href = "/foo";
     document.head.appendChild(base);
 
-    // Create the chart
     let chart = am4core.create("chartDiv1", am4charts.XYChart);
     chart.width = am4core.percent(100);
     chart.height = am4core.percent(100);
@@ -71,6 +63,14 @@ document.addEventListener('DOMContentLoaded', function() {
     balanceSeries.tooltip.label.minHeight = 40;
     balanceSeries.tooltip.label.textAlign = "middle";
     balanceSeries.tooltip.label.textValign = "middle";
+    // Drop-shaped tooltips
+    averageSeries.tooltip.background.cornerRadius = 20;
+    averageSeries.tooltip.background.strokeOpacity = 0;
+    averageSeries.tooltip.pointerOrientation = "vertical";
+    averageSeries.tooltip.label.minWidth = 40;
+    averageSeries.tooltip.label.minHeight = 40;
+    averageSeries.tooltip.label.textAlign = "middle";
+    averageSeries.tooltip.label.textValign = "middle";
 
     // Make bullets grow on hover
     var bullet = balanceSeries.bullets.push(new am4charts.CircleBullet());
@@ -102,21 +102,11 @@ document.addEventListener('DOMContentLoaded', function() {
       history.replaceState('', {}, '/bar?i=' + i + '#abc');
     });
 
-    // Set stroke color based on data properties
-    balanceSeries.propertyFields.stroke = function(dataItem) {
-      if (dataItem.type === "Balance" && dataItem.profit < 0) {
-        return am4core.color("#8B0000");
-      } else if (dataItem.type === "Balance" && dataItem.profit > 0) {
-        return am4core.color("#00008B");
-      } else {
-        return balanceSeries.stroke;
-      }
-    };
-
     // Create average series
     let averageSeries = chart.series.push(new am4charts.LineSeries());
     averageSeries.dataFields.valueY = "average";
     averageSeries.dataFields.categoryX = "category";
+    balanceSeries.tooltipText = "Average: {average}\nTime: {category}";
     averageSeries.strokeWidth = 2;
     averageSeries.stroke = am4core.color("#ff7f0e");
     averageSeries.yAxis = valueAxis; // Set the yAxis for averageSeries
