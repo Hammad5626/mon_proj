@@ -186,10 +186,12 @@
         if (i !== 0 && typeList[i] !== "Balance") {
           currentBalance = totalBalance[i - 1] + netProfitList[i];
           totalBalance.push(currentBalance);
+          console.log(netProfitList[i]);
         }
         else if(i !== 0 && typeList[i] === "Balance") {
           currentBalance = totalBalance[i - 1] + profitList[i];
           totalBalance.push(currentBalance);
+          console.log(profitList[i]);
         }
       }
       let year =0;

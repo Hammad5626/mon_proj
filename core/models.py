@@ -9,7 +9,7 @@ class UserModel(models.Model):
     
 class DataModel(models.Model):
     class Meta:
-        ordering = ('time',)
+        ordering = ('closing_time',)
         
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
     time = models.DateTimeField(primary_key=True)

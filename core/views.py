@@ -146,11 +146,14 @@ def upload_excel(request):
                 symbol = clean_value(row.get('Symbol'))
                 opening_price = clean_value(row.get('Price'))
                 volume_spent = clean_value(row.get('Volume'))
-                closing_time = row.get('Time')
-                try:
-                    closing_time = clean_value(parse_datetime(closing_time))
-                except ValueError as e:
-                    return render(request, 'error.html', {'error_message': str(e)})
+                closing_time = clean_value(row.get('Closing Time'))
+                if closing_time is not None:
+                    try:
+                        closing_time = parse_datetime(closing_time)
+                    except ValueError as e:
+                        return render(request, 'error.html', {'error_message': str(e)})
+                else:
+                    closing_time = time - timedelta(milliseconds=1001)
                 price = clean_value(row.get('Price'))
                 commision = clean_value(row.get('Commission'))
                 swap = clean_value(row.get('Swap'))
