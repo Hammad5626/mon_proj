@@ -151,7 +151,7 @@
         balanceSeries.tooltip.label.minHeight = 40;
         balanceSeries.tooltip.label.textAlign = "middle";
         balanceSeries.tooltip.label.textValign = "middle";
-        
+
         // Drop-shaped tooltips
         averageSeries.tooltip.background.cornerRadius = 20;
         averageSeries.tooltip.background.strokeOpacity = 0;
@@ -160,8 +160,7 @@
         averageSeries.tooltip.label.minHeight = 40;
         averageSeries.tooltip.label.textAlign = "middle";
         averageSeries.tooltip.label.textValign = "middle";
-    
-    
+
         chart.legend = new am4charts.Legend();
         chart.cursor = new am4charts.XYCursor();
         chart.cursor.behavior = "panXY";
@@ -186,12 +185,10 @@
         if (i !== 0 && typeList[i] !== "Balance") {
           currentBalance = totalBalance[i - 1] + netProfitList[i];
           totalBalance.push(currentBalance);
-          console.log(netProfitList[i]);
         }
         else if(i !== 0 && typeList[i] === "Balance") {
           currentBalance = totalBalance[i - 1] + profitList[i];
           totalBalance.push(currentBalance);
-          console.log(profitList[i]);
         }
       }
       let year =0;
