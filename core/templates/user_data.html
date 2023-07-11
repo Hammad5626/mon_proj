@@ -180,7 +180,11 @@
         chart.cursor = new am4charts.XYCursor();
         chart.cursor.behavior = "panXY";
         chart.cursor.snapToSeries = [balanceSeries, averageSeries];
-    
+        let uniqueDates = Array.from(new Set(openingTimeList));
+        console.log(uniqueDates);
+        // Calculate the width of each category cell
+        let categoryCellWidth = categoryAxis.innerWidth / (uniqueDates.length + 3);
+        console.log(categoryCellWidth);
         // Create withdrawal markers
         for (let withdrawal of withdrawalList) {
           let marker = chart.plotContainer.createChild(am4core.Triangle);
@@ -194,6 +198,14 @@
           marker.dy = 10;
           marker.tooltipText = "Withdrawal: " + withdrawal.value + "\nTime: " + withdrawal.category;
           marker.isMeasured = false;
+
+          // Find the index of the category value in the openingTimeList
+          let categoryIndex = uniqueDates.indexOf(withdrawal.category);
+
+          // Calculate the x-position of the marker based on the index and category cell width
+          let xPosition = categoryAxis.start + categoryIndex * categoryCellWidth;
+          console.log(xPosition);
+          marker.x = xPosition;
         }
     
         // Create deposit markers
@@ -209,6 +221,13 @@
           marker.dy = 10;
           marker.tooltipText = "Deposit: " + deposit.value + "\nTime: " + deposit.category;
           marker.isMeasured = false;
+
+          // Find the index of the category value in the openingTimeList
+          let categoryIndex = uniqueDates.indexOf(deposit.category);
+          console.log(categoryIndex);
+          // Calculate the x-position of the marker based on the index and category cell width
+          let xPosition = categoryAxis.start + categoryIndex * categoryCellWidth;
+          marker.x = xPosition;
         }
       }
     });
