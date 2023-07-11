@@ -132,6 +132,8 @@
         balanceSeries.strokeWidth = 2;
         balanceSeries.minBulletDistance = 15;
         balanceSeries.stroke = am4core.color("#1f77b4");
+        // balanceSeries.tensionX = 0.5;
+        // balanceSeries.tensionY = 0.5;
     
         var bullet = balanceSeries.bullets.push(new am4charts.CircleBullet());
         bullet.circle.strokeWidth = 2;
@@ -157,8 +159,17 @@
         averageSeries.strokeWidth = 2;
         averageSeries.stroke = am4core.color("#ff7f0e");
         averageSeries.yAxis = valueAxis; // Set the yAxis for averageSeries
+        // averageSeries.tensionX = 0.8;
+        // averageSeries.tensionY = 0.8;
     
         // Drop-shaped tooltips
+        // Customize tooltip appearance
+        balanceSeries.tooltip.getFillFromObject = false;
+        balanceSeries.tooltip.background.fill = am4core.color("#1f77b4"); // Set the tooltip background color
+        balanceSeries.tooltip.background.stroke = am4core.color("#000"); // Set the tooltip border color
+        balanceSeries.tooltip.background.strokeWidth = 2; // Set the tooltip border width
+        balanceSeries.tooltip.background.cornerRadius = 5; // Set the tooltip border corner radius
+        balanceSeries.tooltip.label.fill = am4core.color("#fff"); // Set the tooltip text color
         balanceSeries.tooltip.background.cornerRadius = 20;
         balanceSeries.tooltip.background.strokeOpacity = 0;
         balanceSeries.tooltip.pointerOrientation = "vertical";
@@ -168,6 +179,12 @@
         balanceSeries.tooltip.label.textValign = "middle";
     
         // Drop-shaped tooltips
+        averageSeries.tooltip.getFillFromObject = false;
+        averageSeries.tooltip.background.fill = am4core.color("#ff7f0e"); // Set the tooltip background color
+        averageSeries.tooltip.background.stroke = am4core.color("#000"); // Set the tooltip border color
+        averageSeries.tooltip.background.strokeWidth = 2; // Set the tooltip border width
+        averageSeries.tooltip.background.cornerRadius = 5; // Set the tooltip border corner radius
+        averageSeries.tooltip.label.fill = am4core.color("#f00"); // Set the tooltip text color
         averageSeries.tooltip.background.cornerRadius = 20;
         averageSeries.tooltip.background.strokeOpacity = 0;
         averageSeries.tooltip.pointerOrientation = "vertical";
