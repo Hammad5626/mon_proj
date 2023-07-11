@@ -62,6 +62,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       initializeChart();
+    
       function initializeChart() {
         let contextData = contextJson;
         let profitList = contextData.profit_list;
@@ -70,15 +71,29 @@
         let openingTimeList = contextData.time_list;
         let totalBalance = [profitList[0]];
         let currentBalance = 0;
-
+        let withdrawalList = [];
+        let depositList = [];
+    
         for (let i = 0; i < profitList.length; i++) {
           if (i !== 0 && typeList[i] !== "Balance") {
             currentBalance = totalBalance[i - 1] + netProfitList[i];
             totalBalance.push(currentBalance);
-          }
-          else if(i !== 0 && typeList[i] === "Balance") {
+          } else if (i !== 0 && typeList[i] === "Balance") {
             currentBalance = totalBalance[i - 1] + profitList[i];
             totalBalance.push(currentBalance);
+    
+            // Check for withdrawal or deposit
+            if (profitList[i] < 0) {
+              withdrawalList.push({
+                category: openingTimeList[i],
+                value: profitList[i],
+              });
+            } else if (profitList[i] > 0) {
+              depositList.push({
+                category: openingTimeList[i],
+                value: profitList[i],
+              });
+            }
           }
         }
     
@@ -142,7 +157,7 @@
         averageSeries.strokeWidth = 2;
         averageSeries.stroke = am4core.color("#ff7f0e");
         averageSeries.yAxis = valueAxis; // Set the yAxis for averageSeries
-
+    
         // Drop-shaped tooltips
         balanceSeries.tooltip.background.cornerRadius = 20;
         balanceSeries.tooltip.background.strokeOpacity = 0;
@@ -151,7 +166,7 @@
         balanceSeries.tooltip.label.minHeight = 40;
         balanceSeries.tooltip.label.textAlign = "middle";
         balanceSeries.tooltip.label.textValign = "middle";
-
+    
         // Drop-shaped tooltips
         averageSeries.tooltip.background.cornerRadius = 20;
         averageSeries.tooltip.background.strokeOpacity = 0;
@@ -160,13 +175,43 @@
         averageSeries.tooltip.label.minHeight = 40;
         averageSeries.tooltip.label.textAlign = "middle";
         averageSeries.tooltip.label.textValign = "middle";
-
+    
         chart.legend = new am4charts.Legend();
         chart.cursor = new am4charts.XYCursor();
         chart.cursor.behavior = "panXY";
         chart.cursor.snapToSeries = [balanceSeries, averageSeries];
+    
+        // Create withdrawal markers
+        for (let withdrawal of withdrawalList) {
+          let marker = chart.plotContainer.createChild(am4core.Triangle);
+          marker.width = 10;
+          marker.height = 10;
+          marker.horizontalCenter = "middle";
+          marker.verticalCenter = "top";
+          marker.rotation = 180; // Pointing upwards
+          marker.stroke = am4core.color("#f00");
+          marker.fill = am4core.color("#f00");
+          marker.dy = 10;
+          marker.tooltipText = "Withdrawal: " + withdrawal.value + "\nTime: " + withdrawal.category;
+          marker.isMeasured = false;
+        }
+    
+        // Create deposit markers
+        for (let deposit of depositList) {
+          let marker = chart.plotContainer.createChild(am4core.Triangle);
+          marker.width = 10;
+          marker.height = 10;
+          marker.horizontalCenter = "middle";
+          marker.verticalCenter = "top";
+          marker.rotation = 0;
+          marker.stroke = am4core.color("#0f0");
+          marker.fill = am4core.color("#0f0");
+          marker.dy = 10;
+          marker.tooltipText = "Deposit: " + deposit.value + "\nTime: " + deposit.category;
+          marker.isMeasured = false;
+        }
       }
-    });    
+    });
   </script>
   <script type="text/javascript" src="{% static 'js/user_data/percentage_growth.js' %}"></script>
   <script>

@@ -46,12 +46,6 @@
                 <ul class="navbar-nav ms-auto">
                     {% if not request.user.is_authenticated %}
                     <li class="nav-item">
-                        <form method="post" action="{% url 'signup' %}">
-                            {% csrf_token %}
-                            <button type="submit" class="nav-link btn btn-danger btn-sm border-2">Sign Up</button>
-                        </form>                        
-                    </li>
-                    <li class="nav-item">
                         <form method="post" action="{% url 'signin' %}">
                             {% csrf_token %}
                             <button type="submit" class="nav-link btn btn-outline-primary btn-sm border-2">Sign In</button>

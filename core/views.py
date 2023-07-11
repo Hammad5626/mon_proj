@@ -87,27 +87,6 @@ def signin(request):
     
     return render(request, 'signin.html', {'form': form})
 
-def signup(request):
-    if request.method == 'POST':
-        form = SignUpForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('index')
-        else:
-            # Retrieve the form errors and pass them to the template
-            error_messages = form.errors.values()
-            for message in error_messages:
-                messages.error(request, message)
-    else:
-        form = SignUpForm()
-
-    # Add a check for the existence of the form object before rendering the template
-    if form:
-        return render(request, 'signup.html', {'form': form})
-    else:
-        return render(request, 'signup.html')
-
 #Logout View
 def logout_view(request):
     logout(request)
