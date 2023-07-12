@@ -158,18 +158,14 @@
         averageSeries.tooltipText = "Average: {average}\nTime: {category}";
         averageSeries.strokeWidth = 2;
         averageSeries.stroke = am4core.color("#ff7f0e");
-        averageSeries.yAxis = valueAxis; // Set the yAxis for averageSeries
-        // averageSeries.tensionX = 0.8;
-        // averageSeries.tensionY = 0.8;
-    
-        // Drop-shaped tooltips
-        // Customize tooltip appearance
+        averageSeries.yAxis = valueAxis;
+
         balanceSeries.tooltip.getFillFromObject = false;
-        balanceSeries.tooltip.background.fill = am4core.color("#1f77b4"); // Set the tooltip background color
-        balanceSeries.tooltip.background.stroke = am4core.color("#000"); // Set the tooltip border color
-        balanceSeries.tooltip.background.strokeWidth = 2; // Set the tooltip border width
-        balanceSeries.tooltip.background.cornerRadius = 5; // Set the tooltip border corner radius
-        balanceSeries.tooltip.label.fill = am4core.color("#fff"); // Set the tooltip text color
+        balanceSeries.tooltip.background.fill = am4core.color("#1f77b4");
+        balanceSeries.tooltip.background.stroke = am4core.color("#000");
+        balanceSeries.tooltip.background.strokeWidth = 2;
+        balanceSeries.tooltip.background.cornerRadius = 5;
+        balanceSeries.tooltip.label.fill = am4core.color("#fff");
         balanceSeries.tooltip.background.cornerRadius = 20;
         balanceSeries.tooltip.background.strokeOpacity = 0;
         balanceSeries.tooltip.pointerOrientation = "vertical";
@@ -177,14 +173,13 @@
         balanceSeries.tooltip.label.minHeight = 40;
         balanceSeries.tooltip.label.textAlign = "middle";
         balanceSeries.tooltip.label.textValign = "middle";
-    
-        // Drop-shaped tooltips
+
         averageSeries.tooltip.getFillFromObject = false;
-        averageSeries.tooltip.background.fill = am4core.color("#ff7f0e"); // Set the tooltip background color
-        averageSeries.tooltip.background.stroke = am4core.color("#000"); // Set the tooltip border color
-        averageSeries.tooltip.background.strokeWidth = 2; // Set the tooltip border width
-        averageSeries.tooltip.background.cornerRadius = 5; // Set the tooltip border corner radius
-        averageSeries.tooltip.label.fill = am4core.color("#f00"); // Set the tooltip text color
+        averageSeries.tooltip.background.fill = am4core.color("#ff7f0e");
+        averageSeries.tooltip.background.stroke = am4core.color("#000");
+        averageSeries.tooltip.background.strokeWidth = 2;
+        averageSeries.tooltip.background.cornerRadius = 5;
+        averageSeries.tooltip.label.fill = am4core.color("#fff");
         averageSeries.tooltip.background.cornerRadius = 20;
         averageSeries.tooltip.background.strokeOpacity = 0;
         averageSeries.tooltip.pointerOrientation = "vertical";
@@ -198,10 +193,8 @@
         chart.cursor.behavior = "panXY";
         chart.cursor.snapToSeries = [balanceSeries, averageSeries];
         let uniqueDates = Array.from(new Set(openingTimeList));
-        console.log(uniqueDates);
         // Calculate the width of each category cell
         let categoryCellWidth = categoryAxis.innerWidth / (uniqueDates.length + 3);
-        console.log(categoryCellWidth);
         // Create withdrawal markers
         for (let withdrawal of withdrawalList) {
           let marker = chart.plotContainer.createChild(am4core.Triangle);
